@@ -44,4 +44,18 @@ export const getTeamById = async (id: TeamId) => {
   return { team: row.team, company: row.company };
 };
 
-export const getTeamsByCompanyId = async (companyId: CompanyId) => {};
+export const getTeamsByCompanyId = async (companyId: CompanyId) => {
+  const companyTeams = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.companyId, companyId));
+  return companyTeams;
+};
+
+export const getTeamMembers = async (teamId: TeamId) => {
+  const userTeams = await db
+    .select()
+    .from(usersToTeams)
+    .where(eq(usersToTeams.teamId, teamId));
+  return userTeams;
+};

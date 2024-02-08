@@ -14,6 +14,24 @@ export const getCompanies = async () => {
   return { companies: c };
 };
 
+export const getMyCompanies = async () => {
+  const { session } = await getUserAuth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const rows = await db
+    .select({
+      companies,
+    })
+    .from(usersToCompanies)
+    .leftJoin(companies, eq(companies.id, usersToCompanies.companyId))
+    .where(eq(usersToCompanies.userId, session.user.id));
+
+  const c = rows.map(({ companies }) => companies!).filter((c) => !!c);
+  return { companies: c };
+};
+
 export const getCompanyById = async (id: CompanyId) => {
   const { id: companyId } = companyIdSchema.parse({ id });
   const [row] = await db
@@ -25,18 +43,10 @@ export const getCompanyById = async (id: CompanyId) => {
   return { company: c };
 };
 
-export const getUserCompanies = async () => {
-  const { session } = await getUserAuth();
-
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  const rows = await db
+export const getCompanyUsers = async (companyId: CompanyId) => {
+  const companyUsers = await db
     .select()
     .from(usersToCompanies)
-    .leftJoin(companies, eq(companies.id, usersToCompanies.companyId))
-    .where(eq(usersToCompanies.userId, session.user.id));
-  const c = rows;
-  return { companies: c };
+    .where(eq(usersToCompanies.companyId, companyId));
+  return companyUsers;
 };

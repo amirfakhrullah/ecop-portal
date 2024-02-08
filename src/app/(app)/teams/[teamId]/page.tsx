@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { getTeamById } from "@/lib/api/teams/queries";
-import { getCompanies } from "@/lib/api/companies/queries";
+import { getTeamById, getTeamMembers } from "@/lib/api/teams/queries";
+import { getCompanies, getMyCompanies } from "@/lib/api/companies/queries";
 import OptimisticTeam from "./OptimisticTeam";
 import { checkAuth } from "@/lib/auth/utils";
 
@@ -26,10 +26,9 @@ export default async function TeamPage({
 const Team = async ({ id }: { id: string }) => {
   await checkAuth();
 
-  const [{ team, company }, { companies: allCompanies }] = await Promise.all([
-    getTeamById(id),
-    getCompanies(),
-  ]);
+  const [{ team, company }, { companies: myCompanies }, teamMembers] =
+    await Promise.all([getTeamById(id), getMyCompanies(), getTeamMembers(id)]);
+
   if (!team || !company) notFound();
 
   return (
@@ -39,8 +38,12 @@ const Team = async ({ id }: { id: string }) => {
         <OptimisticTeam
           team={team}
           company={company}
-          allCompanies={allCompanies}
+          myCompanies={myCompanies}
         />
+        <h1 className="font-semibold text-2xl">Team Users</h1>
+        <pre className="bg-secondary p-4 rounded-lg break-all text-wrap">
+          {JSON.stringify(teamMembers, null, 2)}
+        </pre>
       </div>
     </Suspense>
   );

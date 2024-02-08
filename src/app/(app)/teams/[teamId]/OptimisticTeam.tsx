@@ -13,11 +13,11 @@ import { type Company, type CompanyId } from "@/lib/db/schema/companies";
 export default function OptimisticTeam({
   team,
   company,
-  allCompanies,
+  myCompanies,
 }: {
   team: Team;
   company: Company;
-  allCompanies: Company[];
+  myCompanies: Company[];
 }) {
   const [open, setOpen] = useState(false);
   const openModal = (_?: Team) => {
@@ -33,7 +33,7 @@ export default function OptimisticTeam({
       <Modal open={open} setOpen={setOpen}>
         <TeamForm
           team={team}
-          companies={allCompanies}
+          companies={myCompanies}
           companyId={company.id}
           closeModal={closeModal}
           openModal={openModal}
