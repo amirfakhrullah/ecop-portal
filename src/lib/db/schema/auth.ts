@@ -15,6 +15,9 @@ export const users = pgTable("user", {
   image: text("image"),
 });
 
+/**
+ * `accounts`, `sessions` and `verificationTokens` table are defaults from NextAuth
+ */
 export const accounts = pgTable(
   "account",
   {
