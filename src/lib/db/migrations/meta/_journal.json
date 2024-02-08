@@ -15,6 +15,13 @@
       "when": 1707418701794,
       "tag": "0001_wonderful_silk_fever",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1707423047586,
+      "tag": "0002_loose_luke_cage",
+      "breakpoints": true
     }
   ]
 }

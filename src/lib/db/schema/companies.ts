@@ -1,16 +1,23 @@
-import { text, varchar, timestamp, pgTable, pgEnum, json } from "drizzle-orm/pg-core";
+import {
+  text,
+  varchar,
+  timestamp,
+  pgTable,
+  pgEnum,
+  json,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { type getCompanies } from "@/lib/api/companies/queries";
 import { nanoid, timestamps } from "@/lib/utils";
+import { relations } from "drizzle-orm";
+import { usersToCompanies } from "./usersToCompanies";
 
 export const companyType = pgEnum("company_type", [
   "CLIENT",
   "SUPPLIER",
   "LIAISON",
 ]);
-
-export const companyTypes = companyType.enumValues
 
 export const companies = pgTable("companies", {
   id: varchar("id", { length: 191 })
@@ -31,6 +38,10 @@ export const companies = pgTable("companies", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const companyRelations = relations(companies, ({ many }) => ({
+  usersToCompanies: many(usersToCompanies),
+}));
 
 // Schema for companies - used to validate API requests
 const baseSchema = createSelectSchema(companies).omit(timestamps);

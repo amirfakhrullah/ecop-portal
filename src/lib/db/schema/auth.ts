@@ -6,6 +6,9 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "@auth/core/adapters";
+import { relations } from "drizzle-orm";
+import { usersToTeams } from "./usersToTeams";
+import { usersToCompanies } from "./usersToCompanies";
 
 export const users = pgTable("user", {
   id: text("id").notNull().primaryKey(),
@@ -14,6 +17,11 @@ export const users = pgTable("user", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  usersToTeams: many(usersToTeams),
+  usersToCompanies: many(usersToCompanies),
+}));
 
 /**
  * `accounts`, `sessions` and `verificationTokens` table are defaults from NextAuth

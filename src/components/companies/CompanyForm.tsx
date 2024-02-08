@@ -17,7 +17,7 @@ import { useBackPath } from "@/components/shared/BackButton";
 import {
   type Company,
   insertCompanyParams,
-  companyTypes,
+  companyType,
 } from "@/lib/db/schema/companies";
 import {
   createCompanyAction,
@@ -163,7 +163,7 @@ const CompanyForm = ({
             <SelectValue placeholder="Company Type" />
           </SelectTrigger>
           <SelectContent>
-            {companyTypes.map((type) => (
+            {companyType.enumValues.map((type) => (
               <SelectItem key={type} value={type} className="capitalize">
                 {type}
               </SelectItem>
