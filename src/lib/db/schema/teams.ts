@@ -65,6 +65,7 @@ export type UpdateTeamParams = z.infer<typeof updateTeamParams>;
 export type TeamId = z.infer<typeof teamIdSchema>["id"];
 
 // this type infers the return from getTeams() - meaning it will include any joins
-export type CompleteTeam = Awaited<
-  ReturnType<typeof getTeams>
->["teams"][number];
+export type CompleteTeam = Exclude<
+  Awaited<ReturnType<typeof getTeams>>[number]["teams"],
+  null
+>;

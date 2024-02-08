@@ -1,5 +1,5 @@
 import { db } from "@/lib/db/index";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   CompanyId,
   NewCompanyParams,
@@ -9,11 +9,29 @@ import {
   companies,
   companyIdSchema,
 } from "@/lib/db/schema/companies";
+import { usersToCompanies } from "@/lib/db/schema/usersToCompanies";
+import { getUserAuth } from "@/lib/auth/utils";
 
 export const createCompany = async (company: NewCompanyParams) => {
-  const newCompany = insertCompanySchema.parse(company);
+  const { session } = await getUserAuth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
   try {
-    const [c] = await db.insert(companies).values(newCompany).returning();
+    const newCompany = insertCompanySchema.parse(company);
+    const [c] = await db
+      .insert(companies)
+      .values({
+        ...newCompany,
+        // assert domains type (was defaulting to Json)
+        domains: newCompany.domains as string[],
+      })
+      .returning();
+    // add to usersToCompanies
+    await db.insert(usersToCompanies).values({
+      companyId: c.id,
+      userId: session.user.id,
+    });
     return { company: c };
   } catch (err) {
     const message = (err as Error).message ?? "Error, please try again";
@@ -26,13 +44,39 @@ export const updateCompany = async (
   id: CompanyId,
   company: UpdateCompanyParams
 ) => {
+  const { session } = await getUserAuth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
   const { id: companyId } = companyIdSchema.parse({ id });
-  const newCompany = updateCompanySchema.parse(company);
+  const updatedCompany = updateCompanySchema.parse(company);
+
   try {
+    const [{ foundCompany }] = await db
+      .select({ foundCompany: companies })
+      .from(usersToCompanies)
+      .leftJoin(companies, eq(companies.id, usersToCompanies.companyId))
+      .where(
+        and(
+          eq(usersToCompanies.companyId, companyId),
+          eq(usersToCompanies.userId, session.user.id)
+        )
+      );
+
+    if (!foundCompany) {
+      throw new Error("User does not belong to the company");
+    }
+
     const [c] = await db
       .update(companies)
-      .set({ ...newCompany, updatedAt: new Date() })
-      .where(eq(companies.id, companyId!))
+      .set({
+        ...updatedCompany,
+        // assert domains type (was defaulting to Json)
+        domains: updatedCompany.domains as string[],
+        updatedAt: new Date(),
+      })
+      .where(eq(companies.id, foundCompany.id))
       .returning();
     return { company: c };
   } catch (err) {
@@ -43,11 +87,31 @@ export const updateCompany = async (
 };
 
 export const deleteCompany = async (id: CompanyId) => {
+  const { session } = await getUserAuth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
   const { id: companyId } = companyIdSchema.parse({ id });
   try {
+    const [{ foundCompany }] = await db
+      .select({ foundCompany: companies })
+      .from(usersToCompanies)
+      .leftJoin(companies, eq(companies.id, usersToCompanies.companyId))
+      .where(
+        and(
+          eq(usersToCompanies.companyId, companyId),
+          eq(usersToCompanies.userId, session.user.id)
+        )
+      );
+
+    if (!foundCompany) {
+      throw new Error("User does not belong to the company");
+    }
+
     const [c] = await db
       .delete(companies)
-      .where(eq(companies.id, companyId!))
+      .where(eq(companies.id, foundCompany.id))
       .returning();
     return { company: c };
   } catch (err) {

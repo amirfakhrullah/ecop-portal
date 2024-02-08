@@ -4,7 +4,6 @@ import Loading from "@/app/loading";
 import CompanyList from "@/components/companies/CompanyList";
 import { getCompanies } from "@/lib/api/companies/queries";
 
-
 export const revalidate = 0;
 
 export default async function CompaniesPage() {
@@ -21,12 +20,11 @@ export default async function CompaniesPage() {
 }
 
 const Companies = async () => {
-  
   const { companies } = await getCompanies();
-  
+
   return (
     <Suspense fallback={<Loading />}>
-      <CompanyList companies={companies}  />
+      <CompanyList companies={companies} />
     </Suspense>
   );
 };

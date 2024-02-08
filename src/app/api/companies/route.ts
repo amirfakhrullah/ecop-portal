@@ -7,10 +7,10 @@ import {
   deleteCompany,
   updateCompany,
 } from "@/lib/api/companies/mutations";
-import { 
+import {
   companyIdSchema,
   insertCompanyParams,
-  updateCompanyParams 
+  updateCompanyParams,
 } from "@/lib/db/schema/companies";
 
 export async function POST(req: Request) {
@@ -29,7 +29,6 @@ export async function POST(req: Request) {
     }
   }
 }
-
 
 export async function PUT(req: Request) {
   try {

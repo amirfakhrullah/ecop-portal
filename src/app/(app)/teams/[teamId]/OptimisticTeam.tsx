@@ -10,15 +10,14 @@ import Modal from "@/components/shared/Modal";
 import TeamForm from "@/components/teams/TeamForm";
 import { type Company, type CompanyId } from "@/lib/db/schema/companies";
 
-export default function OptimisticTeam({ 
+export default function OptimisticTeam({
   team,
-  companies,
-  companyId 
-}: { 
-  team: Team; 
-  
-  companies: Company[];
-  companyId?: CompanyId
+  company,
+  allCompanies,
+}: {
+  team: Team;
+  company: Company;
+  allCompanies: Company[];
 }) {
   const [open, setOpen] = useState(false);
   const openModal = (_?: Team) => {
@@ -34,8 +33,8 @@ export default function OptimisticTeam({
       <Modal open={open} setOpen={setOpen}>
         <TeamForm
           team={team}
-          companies={companies}
-        companyId={companyId}
+          companies={allCompanies}
+          companyId={company.id}
           closeModal={closeModal}
           openModal={openModal}
           addOptimistic={updateTeam}
@@ -50,10 +49,17 @@ export default function OptimisticTeam({
       <pre
         className={cn(
           "bg-secondary p-4 rounded-lg break-all text-wrap",
-          optimisticTeam.id === "optimistic" ? "animate-pulse" : "",
+          optimisticTeam.id === "optimistic" ? "animate-pulse" : ""
         )}
       >
         {JSON.stringify(optimisticTeam, null, 2)}
+      </pre>
+
+      <div className="my-5" />
+
+      <h1 className="font-semibold text-2xl">Team Company: {company.name}</h1>
+      <pre className="bg-secondary p-4 rounded-lg break-all text-wrap">
+        {JSON.stringify(company, null, 2)}
       </pre>
     </div>
   );

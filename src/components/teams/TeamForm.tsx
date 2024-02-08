@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useBackPath } from "@/components/shared/BackButton";
 
-
 import {
   Select,
   SelectContent,
@@ -23,7 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { type Team, insertTeamParams } from "@/lib/db/schema/teams";
+import {
+  type Team,
+  insertTeamParams,
+  teamRoleType,
+} from "@/lib/db/schema/teams";
 import {
   createTeamAction,
   deleteTeamAction,
@@ -42,7 +45,7 @@ const TeamForm = ({
 }: {
   team?: Team | null;
   companies: Company[];
-  companyId?: CompanyId
+  companyId?: CompanyId;
   openModal?: (team?: Team) => void;
   closeModal?: () => void;
   addOptimistic?: TAddOptimistic;
@@ -51,17 +54,16 @@ const TeamForm = ({
   const { errors, hasErrors, setErrors, handleChange } =
     useValidatedForm<Team>(insertTeamParams);
   const editing = !!team?.id;
-  
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [pending, startMutation] = useTransition();
 
   const router = useRouter();
   const backpath = useBackPath("teams");
 
-
   const onSuccess = (
     action: Action,
-    data?: { error: string; values: Team },
+    data?: { error: string; values: Team }
   ) => {
     const failed = Boolean(data?.error);
     if (failed) {
@@ -81,7 +83,10 @@ const TeamForm = ({
     setErrors(null);
 
     const payload = Object.fromEntries(data.entries());
-    const teamParsed = await insertTeamParams.safeParseAsync({ companyId, ...payload });
+    const teamParsed = await insertTeamParams.safeParseAsync({
+      companyId,
+      ...payload,
+    });
     if (!teamParsed.success) {
       setErrors(teamParsed?.error.flatten().fieldErrors);
       return;
@@ -93,15 +98,15 @@ const TeamForm = ({
       updatedAt: team?.updatedAt ?? new Date(),
       createdAt: team?.createdAt ?? new Date(),
       id: team?.id ?? "",
-      userId: team?.userId ?? "",
       ...values,
     };
     try {
       startMutation(async () => {
-        addOptimistic && addOptimistic({
-          data: pendingTeam,
-          action: editing ? "update" : "create",
-        });
+        addOptimistic &&
+          addOptimistic({
+            data: pendingTeam,
+            action: editing ? "update" : "create",
+          });
 
         const error = editing
           ? await updateTeamAction({ ...values, id: team.id })
@@ -109,11 +114,11 @@ const TeamForm = ({
 
         const errorFormatted = {
           error: error ?? "Error",
-          values: pendingTeam 
+          values: pendingTeam,
         };
         onSuccess(
           editing ? "update" : "create",
-          error ? errorFormatted : undefined,
+          error ? errorFormatted : undefined
         );
       });
     } catch (e) {
@@ -126,11 +131,11 @@ const TeamForm = ({
   return (
     <form action={handleSubmit} onChange={handleChange} className={"space-y-8"}>
       {/* Schema fields start */}
-              <div>
+      <div>
         <Label
           className={cn(
             "mb-2 inline-block",
-            errors?.title ? "text-destructive" : "",
+            errors?.title ? "text-destructive" : ""
           )}
         >
           Title
@@ -148,50 +153,63 @@ const TeamForm = ({
         )}
       </div>
 
-      {companyId ? null : <div>
-        <Label
-          className={cn(
-            "mb-2 inline-block",
-            errors?.companyId ? "text-destructive" : "",
-          )}
-        >
-          Company
-        </Label>
-        <Select defaultValue={team?.companyId} name="companyId">
-          <SelectTrigger
-            className={cn(errors?.companyId ? "ring ring-destructive" : "")}
-          >
-            <SelectValue placeholder="Select a company" />
-          </SelectTrigger>
-          <SelectContent>
-          {companies?.map((company) => (
-            <SelectItem key={company.id} value={company.id.toString()}>
-              {company.id}{/* TODO: Replace with a field from the company model */}
-            </SelectItem>
-           ))}
-          </SelectContent>
-        </Select>
-        {errors?.companyId ? (
-          <p className="text-xs text-destructive mt-2">{errors.companyId[0]}</p>
-        ) : (
-          <div className="h-6" />
-        )}
-      </div> }
+      {companyId ? null : (
         <div>
+          <Label
+            className={cn(
+              "mb-2 inline-block",
+              errors?.companyId ? "text-destructive" : ""
+            )}
+          >
+            Company
+          </Label>
+          <Select defaultValue={team?.companyId} name="companyId">
+            <SelectTrigger
+              className={cn(errors?.companyId ? "ring ring-destructive" : "")}
+            >
+              <SelectValue placeholder="Select a company" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies?.map((company) => (
+                <SelectItem key={company.id} value={company.id.toString()}>
+                  {company.id}
+                  {/* TODO: Replace with a field from the company model */}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors?.companyId ? (
+            <p className="text-xs text-destructive mt-2">
+              {errors.companyId[0]}
+            </p>
+          ) : (
+            <div className="h-6" />
+          )}
+        </div>
+      )}
+      <div>
         <Label
           className={cn(
             "mb-2 inline-block",
-            errors?.roleType ? "text-destructive" : "",
+            errors?.roleType ? "text-destructive" : ""
           )}
         >
           Role Type
         </Label>
-        <Input
-          type="text"
-          name="roleType"
-          className={cn(errors?.roleType ? "ring ring-destructive" : "")}
-          defaultValue={team?.roleType ?? ""}
-        />
+        <Select defaultValue={team?.roleType} name="roleType">
+          <SelectTrigger
+            className={cn(errors?.roleType ? "ring ring-destructive" : "")}
+          >
+            <SelectValue placeholder="Select a company" />
+          </SelectTrigger>
+          <SelectContent>
+            {teamRoleType.enumValues?.map((roleType) => (
+              <SelectItem key={roleType} value={roleType}>
+                {roleType}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {errors?.roleType ? (
           <p className="text-xs text-destructive mt-2">{errors.roleType[0]}</p>
         ) : (

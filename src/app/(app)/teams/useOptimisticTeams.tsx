@@ -13,12 +13,12 @@ export const useOptimisticTeams = (
     teams,
     (
       currentState: CompleteTeam[],
-      action: OptimisticAction<Team>,
+      action: OptimisticAction<Team>
     ): CompleteTeam[] => {
       const { data } = action;
 
       const optimisticCompany = companies.find(
-        (company) => company.id === data.companyId,
+        (company) => company.id === data.companyId
       )!;
 
       const optimisticTeam = {
@@ -34,16 +34,16 @@ export const useOptimisticTeams = (
             : [...currentState, optimisticTeam];
         case "update":
           return currentState.map((item) =>
-            item.id === data.id ? { ...item, ...optimisticTeam } : item,
+            item.id === data.id ? { ...item, ...optimisticTeam } : item
           );
         case "delete":
           return currentState.map((item) =>
-            item.id === data.id ? { ...item, id: "delete" } : item,
+            item.id === data.id ? { ...item, id: "delete" } : item
           );
         default:
           return currentState;
       }
-    },
+    }
   );
 
   return { addOptimisticTeam, optimisticTeams };

@@ -24,11 +24,13 @@ export default async function TeamsPage() {
 const Teams = async () => {
   await checkAuth();
 
-  const { teams } = await getTeams();
-  const { companies } = await getCompanies();
+  const [data, { companies }] = await Promise.all([getTeams(), getCompanies()]);
   return (
     <Suspense fallback={<Loading />}>
-      <TeamList teams={teams} companies={companies} />
+      <TeamList
+        teams={data.map(({ teams }) => teams!).flat()}
+        companies={companies}
+      />
     </Suspense>
   );
 };

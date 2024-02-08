@@ -9,15 +9,7 @@ import { Button } from "@/components/ui/button";
 import Modal from "@/components/shared/Modal";
 import CompanyForm from "@/components/companies/CompanyForm";
 
-
-export default function OptimisticCompany({ 
-  company,
-   
-}: { 
-  company: Company; 
-  
-  
-}) {
+export default function OptimisticCompany({ company }: { company: Company }) {
   const [open, setOpen] = useState(false);
   const openModal = (_?: Company) => {
     setOpen(true);
@@ -32,7 +24,6 @@ export default function OptimisticCompany({
       <Modal open={open} setOpen={setOpen}>
         <CompanyForm
           company={company}
-          
           closeModal={closeModal}
           openModal={openModal}
           addOptimistic={updateCompany}
@@ -47,7 +38,7 @@ export default function OptimisticCompany({
       <pre
         className={cn(
           "bg-secondary p-4 rounded-lg break-all text-wrap",
-          optimisticCompany.id === "optimistic" ? "animate-pulse" : "",
+          optimisticCompany.id === "optimistic" ? "animate-pulse" : ""
         )}
       >
         {JSON.stringify(optimisticCompany, null, 2)}
