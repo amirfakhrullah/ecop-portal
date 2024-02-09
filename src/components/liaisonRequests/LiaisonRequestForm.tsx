@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useValidatedForm } from "@/lib/hooks/useValidatedForm";
 
 import { type Action, cn } from "@/lib/utils";
-import { type TAddOptimistic } from "@/app/(app)/teams/useOptimisticTeams";
+import { type TAddOptimistic } from "@/app/(app)/liaison-requests/useOptimisticLiaisonRequests";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,47 +23,54 @@ import {
 } from "@/components/ui/select";
 
 import {
-  type Team,
-  insertTeamParams,
-  teamRoleType,
-} from "@/lib/db/schema/teams";
+  type LiaisonRequest,
+  insertLiaisonRequestParams,
+} from "@/lib/db/schema/liaisonRequests";
 import {
-  createTeamAction,
-  deleteTeamAction,
-  updateTeamAction,
-} from "@/lib/actions/teams";
+  createLiaisonRequestAction,
+  deleteLiaisonRequestAction,
+  updateLiaisonRequestAction,
+} from "@/lib/actions/liaisonRequests";
+import {
+  type ClientRequest,
+  type ClientRequestId,
+} from "@/lib/db/schema/clientRequests";
 import { type Company, type CompanyId } from "@/lib/db/schema/companies";
 
-const TeamForm = ({
+const LiaisonRequestForm = ({
+  clientRequests,
+  clientRequestId,
   companies,
   companyId,
-  team,
+  liaisonRequest,
   openModal,
   closeModal,
   addOptimistic,
   postSuccess,
 }: {
-  team?: Team | null;
+  liaisonRequest?: LiaisonRequest | null;
+  clientRequests: ClientRequest[];
+  clientRequestId?: ClientRequestId;
   companies: Company[];
   companyId?: CompanyId;
-  openModal?: (team?: Team) => void;
+  openModal?: (liaisonRequest?: LiaisonRequest) => void;
   closeModal?: () => void;
   addOptimistic?: TAddOptimistic;
   postSuccess?: () => void;
 }) => {
   const { errors, hasErrors, setErrors, handleChange } =
-    useValidatedForm<Team>(insertTeamParams);
-  const editing = !!team?.id;
+    useValidatedForm<LiaisonRequest>(insertLiaisonRequestParams);
+  const editing = !!liaisonRequest?.id;
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [pending, startMutation] = useTransition();
 
   const router = useRouter();
-  const backpath = useBackPath("teams");
+  const backpath = useBackPath("liaison-requests");
 
   const onSuccess = (
     action: Action,
-    data?: { error: string; values: Team }
+    data?: { error: string; values: LiaisonRequest }
   ) => {
     const failed = Boolean(data?.error);
     if (failed) {
@@ -74,7 +81,7 @@ const TeamForm = ({
     } else {
       router.refresh();
       postSuccess && postSuccess();
-      toast.success(`Team ${action}d!`);
+      toast.success(`LiaisonRequest ${action}d!`);
       if (action === "delete") router.push(backpath);
     }
   };
@@ -83,38 +90,44 @@ const TeamForm = ({
     setErrors(null);
 
     const payload = Object.fromEntries(data.entries());
-    const teamParsed = await insertTeamParams.safeParseAsync({
-      companyId,
-      ...payload,
-    });
-    if (!teamParsed.success) {
-      setErrors(teamParsed?.error.flatten().fieldErrors);
+    const liaisonRequestParsed =
+      await insertLiaisonRequestParams.safeParseAsync({
+        clientRequestId,
+        companyId,
+        ...payload,
+      });
+    if (!liaisonRequestParsed.success) {
+      setErrors(liaisonRequestParsed?.error.flatten().fieldErrors);
       return;
     }
 
     closeModal && closeModal();
-    const values = teamParsed.data;
-    const pendingTeam: Team = {
-      updatedAt: team?.updatedAt ?? new Date(),
-      createdAt: team?.createdAt ?? new Date(),
-      id: team?.id ?? "",
+    const values = liaisonRequestParsed.data;
+    const pendingLiaisonRequest: LiaisonRequest = {
+      updatedAt: liaisonRequest?.updatedAt ?? new Date(),
+      createdAt: liaisonRequest?.createdAt ?? new Date(),
+      id: liaisonRequest?.id ?? "",
+      fromLiaisonUserId: liaisonRequest?.fromLiaisonUserId ?? "",
       ...values,
     };
     try {
       startMutation(async () => {
         addOptimistic &&
           addOptimistic({
-            data: pendingTeam,
+            data: pendingLiaisonRequest,
             action: editing ? "update" : "create",
           });
 
         const error = editing
-          ? await updateTeamAction({ ...values, id: team.id })
-          : await createTeamAction(values);
+          ? await updateLiaisonRequestAction({
+              ...values,
+              id: liaisonRequest.id,
+            })
+          : await createLiaisonRequestAction(values);
 
         const errorFormatted = {
           error: error ?? "Error",
-          values: pendingTeam,
+          values: pendingLiaisonRequest,
         };
         onSuccess(
           editing ? "update" : "create",
@@ -131,41 +144,70 @@ const TeamForm = ({
   return (
     <form action={handleSubmit} onChange={handleChange} className={"space-y-8"}>
       {/* Schema fields start */}
-      <div>
-        <Label
-          className={cn(
-            "mb-2 inline-block",
-            errors?.title ? "text-destructive" : ""
+
+      {clientRequestId ? null : (
+        <div>
+          <Label
+            className={cn(
+              "mb-2 inline-block",
+              errors?.originatingClientRequestId ? "text-destructive" : ""
+            )}
+          >
+            ClientRequest
+          </Label>
+          <Select
+            defaultValue={liaisonRequest?.originatingClientRequestId ?? ""}
+            name="originatingClientRequestId"
+          >
+            <SelectTrigger
+              className={cn(
+                errors?.originatingClientRequestId
+                  ? "ring ring-destructive"
+                  : ""
+              )}
+            >
+              <SelectValue placeholder="Select a clientRequest" />
+            </SelectTrigger>
+            <SelectContent>
+              {clientRequests?.map((clientRequest) => (
+                <SelectItem
+                  key={clientRequest.id}
+                  value={clientRequest.id.toString()}
+                >
+                  {clientRequest.id}
+                  {/* TODO: Replace with a field from the clientRequest model */}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors?.originatingClientRequestId ? (
+            <p className="text-xs text-destructive mt-2">
+              {errors.originatingClientRequestId[0]}
+            </p>
+          ) : (
+            <div className="h-6" />
           )}
-        >
-          Title
-        </Label>
-        <Input
-          type="text"
-          name="title"
-          className={cn(errors?.title ? "ring ring-destructive" : "")}
-          defaultValue={team?.title ?? ""}
-        />
-        {errors?.title ? (
-          <p className="text-xs text-destructive mt-2">{errors.title[0]}</p>
-        ) : (
-          <div className="h-6" />
-        )}
-      </div>
+        </div>
+      )}
 
       {companyId ? null : (
         <div>
           <Label
             className={cn(
               "mb-2 inline-block",
-              errors?.companyId ? "text-destructive" : ""
+              errors?.forwardedToSupplierId ? "text-destructive" : ""
             )}
           >
             Company
           </Label>
-          <Select defaultValue={team?.companyId} name="companyId">
+          <Select
+            defaultValue={liaisonRequest?.forwardedToSupplierId ?? ""}
+            name="forwardedToSupplierId"
+          >
             <SelectTrigger
-              className={cn(errors?.companyId ? "ring ring-destructive" : "")}
+              className={cn(
+                errors?.forwardedToSupplierId ? "ring ring-destructive" : ""
+              )}
             >
               <SelectValue placeholder="Select a company" />
             </SelectTrigger>
@@ -178,9 +220,9 @@ const TeamForm = ({
               ))}
             </SelectContent>
           </Select>
-          {errors?.companyId ? (
+          {errors?.forwardedToSupplierId ? (
             <p className="text-xs text-destructive mt-2">
-              {errors.companyId[0]}
+              {errors.forwardedToSupplierId[0]}
             </p>
           ) : (
             <div className="h-6" />
@@ -191,27 +233,19 @@ const TeamForm = ({
         <Label
           className={cn(
             "mb-2 inline-block",
-            errors?.roleType ? "text-destructive" : ""
+            errors?.notes ? "text-destructive" : ""
           )}
         >
-          Role Type
+          Notes
         </Label>
-        <Select defaultValue={team?.roleType} name="roleType">
-          <SelectTrigger
-            className={cn(errors?.roleType ? "ring ring-destructive" : "")}
-          >
-            <SelectValue placeholder="Select a company" />
-          </SelectTrigger>
-          <SelectContent>
-            {teamRoleType.enumValues.map((roleType) => (
-              <SelectItem key={roleType} value={roleType}>
-                {roleType}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors?.roleType ? (
-          <p className="text-xs text-destructive mt-2">{errors.roleType[0]}</p>
+        <Input
+          type="text"
+          name="notes"
+          className={cn(errors?.notes ? "ring ring-destructive" : "")}
+          defaultValue={liaisonRequest?.notes ?? ""}
+        />
+        {errors?.notes ? (
+          <p className="text-xs text-destructive mt-2">{errors.notes[0]}</p>
         ) : (
           <div className="h-6" />
         )}
@@ -231,12 +265,13 @@ const TeamForm = ({
             setIsDeleting(true);
             closeModal && closeModal();
             startMutation(async () => {
-              addOptimistic && addOptimistic({ action: "delete", data: team });
-              const error = await deleteTeamAction(team.id);
+              addOptimistic &&
+                addOptimistic({ action: "delete", data: liaisonRequest });
+              const error = await deleteLiaisonRequestAction(liaisonRequest.id);
               setIsDeleting(false);
               const errorFormatted = {
                 error: error ?? "Error",
-                values: team,
+                values: liaisonRequest,
               };
 
               onSuccess("delete", error ? errorFormatted : undefined);
@@ -250,7 +285,7 @@ const TeamForm = ({
   );
 };
 
-export default TeamForm;
+export default LiaisonRequestForm;
 
 const SaveButton = ({
   editing,

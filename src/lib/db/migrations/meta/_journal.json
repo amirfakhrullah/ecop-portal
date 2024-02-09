@@ -22,6 +22,41 @@
       "when": 1707423047586,
       "tag": "0002_loose_luke_cage",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1707466258732,
+      "tag": "0003_magical_wither",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1707467584188,
+      "tag": "0004_friendly_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1707469619995,
+      "tag": "0005_stiff_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1707470458450,
+      "tag": "0006_lethal_roulette",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1707470944432,
+      "tag": "0007_flat_ma_gnuci",
+      "breakpoints": true
     }
   ]
 }
