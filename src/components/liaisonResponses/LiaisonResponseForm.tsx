@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useValidatedForm } from "@/lib/hooks/useValidatedForm";
 
 import { type Action, cn } from "@/lib/utils";
-import { type TAddOptimistic } from "@/app/(app)/supplier-responses/useOptimisticSupplierResponses";
+import { type TAddOptimistic } from "@/app/(app)/liaison-responses/useOptimisticLiaisonResponses";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,52 +21,59 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 
+import {
+  type LiaisonResponse,
+  insertLiaisonResponseParams,
+} from "@/lib/db/schema/liaisonResponses";
+import {
+  createLiaisonResponseAction,
+  deleteLiaisonResponseAction,
+  updateLiaisonResponseAction,
+} from "@/lib/actions/liaisonResponses";
 import {
   type SupplierResponse,
-  insertSupplierResponseParams,
+  type SupplierResponseId,
 } from "@/lib/db/schema/supplierResponses";
 import {
-  createSupplierResponseAction,
-  deleteSupplierResponseAction,
-  updateSupplierResponseAction,
-} from "@/lib/actions/supplierResponses";
-import {
-  type LiaisonRequest,
-  type LiaisonRequestId,
-} from "@/lib/db/schema/liaisonRequests";
+  type ClientRequest,
+  type ClientRequestId,
+} from "@/lib/db/schema/clientRequests";
 
-const SupplierResponseForm = ({
-  liaisonRequests,
-  liaisonRequestId,
-  supplierResponse,
+const LiaisonResponseForm = ({
+  supplierResponses,
+  supplierResponseId,
+  clientRequests,
+  clientRequestId,
+  liaisonResponse,
   openModal,
   closeModal,
   addOptimistic,
   postSuccess,
 }: {
-  supplierResponse?: SupplierResponse | null;
-  liaisonRequests: LiaisonRequest[];
-  liaisonRequestId?: LiaisonRequestId;
-  openModal?: (supplierResponse?: SupplierResponse) => void;
+  liaisonResponse?: LiaisonResponse | null;
+  supplierResponses: SupplierResponse[];
+  supplierResponseId?: SupplierResponseId;
+  clientRequests: ClientRequest[];
+  clientRequestId?: ClientRequestId;
+  openModal?: (liaisonResponse?: LiaisonResponse) => void;
   closeModal?: () => void;
   addOptimistic?: TAddOptimistic;
   postSuccess?: () => void;
 }) => {
   const { errors, hasErrors, setErrors, handleChange } =
-    useValidatedForm<SupplierResponse>(insertSupplierResponseParams);
-  const editing = !!supplierResponse?.id;
+    useValidatedForm<LiaisonResponse>(insertLiaisonResponseParams);
+  const editing = !!liaisonResponse?.id;
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [pending, startMutation] = useTransition();
 
   const router = useRouter();
-  const backpath = useBackPath("supplier-responses");
+  const backpath = useBackPath("liaison-responses");
 
   const onSuccess = (
     action: Action,
-    data?: { error: string; values: SupplierResponse }
+    data?: { error: string; values: LiaisonResponse }
   ) => {
     const failed = Boolean(data?.error);
     if (failed) {
@@ -77,7 +84,7 @@ const SupplierResponseForm = ({
     } else {
       router.refresh();
       postSuccess && postSuccess();
-      toast.success(`SupplierResponse ${action}d!`);
+      toast.success(`LiaisonResponse ${action}d!`);
       if (action === "delete") router.push(backpath);
     }
   };
@@ -86,43 +93,44 @@ const SupplierResponseForm = ({
     setErrors(null);
 
     const payload = Object.fromEntries(data.entries());
-    const supplierResponseParsed =
-      await insertSupplierResponseParams.safeParseAsync({
-        liaisonRequestId,
+    const liaisonResponseParsed =
+      await insertLiaisonResponseParams.safeParseAsync({
+        supplierResponseId,
+        clientRequestId,
         ...payload,
       });
-    if (!supplierResponseParsed.success) {
-      setErrors(supplierResponseParsed?.error.flatten().fieldErrors);
+    if (!liaisonResponseParsed.success) {
+      setErrors(liaisonResponseParsed?.error.flatten().fieldErrors);
       return;
     }
 
     closeModal && closeModal();
-    const values = supplierResponseParsed.data;
-    const pendingSupplierResponse: SupplierResponse = {
-      updatedAt: supplierResponse?.updatedAt ?? new Date(),
-      createdAt: supplierResponse?.createdAt ?? new Date(),
-      id: supplierResponse?.id ?? "",
-      fromSupplierUserId: supplierResponse?.fromSupplierUserId ?? "",
+    const values = liaisonResponseParsed.data;
+    const pendingLiaisonResponse: LiaisonResponse = {
+      updatedAt: liaisonResponse?.updatedAt ?? new Date(),
+      createdAt: liaisonResponse?.createdAt ?? new Date(),
+      id: liaisonResponse?.id ?? "",
+      fromLiaisonUserId: liaisonResponse?.fromLiaisonUserId ?? "",
       ...values,
     };
     try {
       startMutation(async () => {
         addOptimistic &&
           addOptimistic({
-            data: pendingSupplierResponse,
+            data: pendingLiaisonResponse,
             action: editing ? "update" : "create",
           });
 
         const error = editing
-          ? await updateSupplierResponseAction({
+          ? await updateLiaisonResponseAction({
               ...values,
-              id: supplierResponse.id,
+              id: liaisonResponse.id,
             })
-          : await createSupplierResponseAction(values);
+          : await createLiaisonResponseAction(values);
 
         const errorFormatted = {
           error: error ?? "Error",
-          values: pendingSupplierResponse,
+          values: pendingLiaisonResponse,
         };
         onSuccess(
           editing ? "update" : "create",
@@ -140,44 +148,87 @@ const SupplierResponseForm = ({
     <form action={handleSubmit} onChange={handleChange} className={"space-y-8"}>
       {/* Schema fields start */}
 
-      {liaisonRequestId ? null : (
+      {supplierResponseId ? null : (
         <div>
           <Label
             className={cn(
               "mb-2 inline-block",
-              errors?.respondsToLiaisonRequestId ? "text-destructive" : ""
+              errors?.originatingSupplierResponseId ? "text-destructive" : ""
             )}
           >
-            LiaisonRequest
+            SupplierResponse
           </Label>
           <Select
-            defaultValue={supplierResponse?.respondsToLiaisonRequestId}
-            name="respondsToLiaisonRequestId"
+            defaultValue={liaisonResponse?.originatingSupplierResponseId}
+            name="originatingSupplierResponseId"
           >
             <SelectTrigger
               className={cn(
-                errors?.respondsToLiaisonRequestId
+                errors?.originatingSupplierResponseId
                   ? "ring ring-destructive"
                   : ""
               )}
             >
-              <SelectValue placeholder="Select a liaisonRequest" />
+              <SelectValue placeholder="Select a supplierResponse" />
             </SelectTrigger>
             <SelectContent>
-              {liaisonRequests?.map((liaisonRequest) => (
+              {supplierResponses?.map((supplierResponse) => (
                 <SelectItem
-                  key={liaisonRequest.id}
-                  value={liaisonRequest.id.toString()}
+                  key={supplierResponse.id}
+                  value={supplierResponse.id}
                 >
-                  {liaisonRequest.id}
-                  {/* TODO: Replace with a field from the liaisonRequest model */}
+                  {supplierResponse.id}
+                  {/* TODO: Replace with a field from the supplierResponse model */}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors?.respondsToLiaisonRequestId ? (
+          {errors?.originatingSupplierResponseId ? (
             <p className="text-xs text-destructive mt-2">
-              {errors.respondsToLiaisonRequestId[0]}
+              {errors.originatingSupplierResponseId[0]}
+            </p>
+          ) : (
+            <div className="h-6" />
+          )}
+        </div>
+      )}
+
+      {clientRequestId ? null : (
+        <div>
+          <Label
+            className={cn(
+              "mb-2 inline-block",
+              errors?.respondsToClientRequestId ? "text-destructive" : ""
+            )}
+          >
+            ClientRequest
+          </Label>
+          <Select
+            defaultValue={liaisonResponse?.respondsToClientRequestId}
+            name="respondsToClientRequestId"
+          >
+            <SelectTrigger
+              className={cn(
+                errors?.respondsToClientRequestId ? "ring ring-destructive" : ""
+              )}
+            >
+              <SelectValue placeholder="Select a clientRequest" />
+            </SelectTrigger>
+            <SelectContent>
+              {clientRequests?.map((clientRequest) => (
+                <SelectItem
+                  key={clientRequest.id}
+                  value={clientRequest.id.toString()}
+                >
+                  {clientRequest.id}
+                  {/* TODO: Replace with a field from the clientRequest model */}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors?.respondsToClientRequestId ? (
+            <p className="text-xs text-destructive mt-2">
+              {errors.respondsToClientRequestId[0]}
             </p>
           ) : (
             <div className="h-6" />
@@ -188,42 +239,19 @@ const SupplierResponseForm = ({
         <Label
           className={cn(
             "mb-2 inline-block",
-            errors?.isApproved ? "text-destructive" : ""
+            errors?.margin ? "text-destructive" : ""
           )}
         >
-          Is Approved
-        </Label>
-        <br />
-        <Checkbox
-          defaultChecked={!!supplierResponse?.isApproved}
-          name={"isApproved"}
-          className={cn(errors?.isApproved ? "ring ring-destructive" : "")}
-        />
-        {errors?.isApproved ? (
-          <p className="text-xs text-destructive mt-2">
-            {errors.isApproved[0]}
-          </p>
-        ) : (
-          <div className="h-6" />
-        )}
-      </div>
-      <div>
-        <Label
-          className={cn(
-            "mb-2 inline-block",
-            errors?.price ? "text-destructive" : ""
-          )}
-        >
-          Price
+          Margin
         </Label>
         <Input
           type="text"
-          name="price"
-          className={cn(errors?.price ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.price ?? ""}
+          name="margin"
+          className={cn(errors?.margin ? "ring ring-destructive" : "")}
+          defaultValue={liaisonResponse?.margin ?? ""}
         />
-        {errors?.price ? (
-          <p className="text-xs text-destructive mt-2">{errors.price[0]}</p>
+        {errors?.margin ? (
+          <p className="text-xs text-destructive mt-2">{errors.margin[0]}</p>
         ) : (
           <div className="h-6" />
         )}
@@ -241,7 +269,7 @@ const SupplierResponseForm = ({
           type="text"
           name="unitCost"
           className={cn(errors?.unitCost ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.unitCost ?? ""}
+          defaultValue={liaisonResponse?.unitCost ?? ""}
         />
         {errors?.unitCost ? (
           <p className="text-xs text-destructive mt-2">{errors.unitCost[0]}</p>
@@ -262,7 +290,7 @@ const SupplierResponseForm = ({
           type="text"
           name="printPlateCost"
           className={cn(errors?.printPlateCost ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.printPlateCost ?? ""}
+          defaultValue={liaisonResponse?.printPlateCost ?? ""}
         />
         {errors?.printPlateCost ? (
           <p className="text-xs text-destructive mt-2">
@@ -285,7 +313,7 @@ const SupplierResponseForm = ({
           type="text"
           name="dieCost"
           className={cn(errors?.dieCost ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.dieCost ?? ""}
+          defaultValue={liaisonResponse?.dieCost ?? ""}
         />
         {errors?.dieCost ? (
           <p className="text-xs text-destructive mt-2">{errors.dieCost[0]}</p>
@@ -306,7 +334,7 @@ const SupplierResponseForm = ({
           type="text"
           name="otherSetupCost"
           className={cn(errors?.otherSetupCost ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.otherSetupCost ?? ""}
+          defaultValue={liaisonResponse?.otherSetupCost ?? ""}
         />
         {errors?.otherSetupCost ? (
           <p className="text-xs text-destructive mt-2">
@@ -329,7 +357,7 @@ const SupplierResponseForm = ({
           type="text"
           name="deliveryCost"
           className={cn(errors?.deliveryCost ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.deliveryCost ?? ""}
+          defaultValue={liaisonResponse?.deliveryCost ?? ""}
         />
         {errors?.deliveryCost ? (
           <p className="text-xs text-destructive mt-2">
@@ -352,7 +380,7 @@ const SupplierResponseForm = ({
           type="text"
           name="tax"
           className={cn(errors?.tax ? "ring ring-destructive" : "")}
-          defaultValue={supplierResponse?.tax ?? ""}
+          defaultValue={liaisonResponse?.tax ?? ""}
         />
         {errors?.tax ? (
           <p className="text-xs text-destructive mt-2">{errors.tax[0]}</p>
@@ -376,14 +404,14 @@ const SupplierResponseForm = ({
             closeModal && closeModal();
             startMutation(async () => {
               addOptimistic &&
-                addOptimistic({ action: "delete", data: supplierResponse });
-              const error = await deleteSupplierResponseAction(
-                supplierResponse.id
+                addOptimistic({ action: "delete", data: liaisonResponse });
+              const error = await deleteLiaisonResponseAction(
+                liaisonResponse.id
               );
               setIsDeleting(false);
               const errorFormatted = {
                 error: error ?? "Error",
-                values: supplierResponse,
+                values: liaisonResponse,
               };
 
               onSuccess("delete", error ? errorFormatted : undefined);
@@ -397,7 +425,7 @@ const SupplierResponseForm = ({
   );
 };
 
-export default SupplierResponseForm;
+export default LiaisonResponseForm;
 
 const SaveButton = ({
   editing,
