@@ -12,17 +12,15 @@ export const liaisonRequests = pgTable("liaison_requests", {
   id: varchar("id", { length: 191 })
     .primaryKey()
     .$defaultFn(() => nanoid()),
-  fromLiaisonUserId: varchar("from_liaison_user_id", { length: 256 })
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
+  fromLiaisonUserId: varchar("from_liaison_user_id", {
+    length: 256,
+  }).references(() => users.id, { onDelete: "no action" }),
   originatingClientRequestId: varchar("origininating_client_request_id", {
     length: 256,
-  })
-    .references(() => clientRequests.id, { onDelete: "cascade" })
-    .notNull(),
-  forwardedToSupplierId: varchar("forwarded_to_supplier_id", { length: 256 })
-    .references(() => companies.id, { onDelete: "cascade" })
-    .notNull(),
+  }).references(() => clientRequests.id, { onDelete: "no action" }),
+  forwardedToSupplierId: varchar("forwarded_to_supplier_id", {
+    length: 256,
+  }).references(() => companies.id, { onDelete: "no action" }),
   notes: text("notes"),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),

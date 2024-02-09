@@ -24,17 +24,13 @@ export const liaisonResponses = pgTable("liaison_responses", {
     .$defaultFn(() => nanoid()),
   originatingSupplierResponseId: varchar("originating_supplier_response_id", {
     length: 256,
-  })
-    .references(() => supplierResponses.id, { onDelete: "cascade" })
-    .notNull(),
+  }).references(() => supplierResponses.id, { onDelete: "no action" }),
   respondsToClientRequestId: varchar("responds_to_client_request_id", {
     length: 256,
-  })
-    .references(() => clientRequests.id, { onDelete: "cascade" })
-    .notNull(),
-  fromLiaisonUserId: varchar("from_liaison_user_id", { length: 256 })
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
+  }).references(() => clientRequests.id, { onDelete: "no action" }),
+  fromLiaisonUserId: varchar("from_liaison_user_id", {
+    length: 256,
+  }).references(() => users.id, { onDelete: "no action" }),
   // Additional metadata
   margin: real("margin"),
   unitCost: real("unit_cost"),

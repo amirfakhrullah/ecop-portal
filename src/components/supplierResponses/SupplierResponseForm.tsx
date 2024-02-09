@@ -151,7 +151,7 @@ const SupplierResponseForm = ({
             LiaisonRequest
           </Label>
           <Select
-            defaultValue={supplierResponse?.respondsToLiaisonRequestId}
+            defaultValue={supplierResponse?.respondsToLiaisonRequestId ?? ""}
             name="respondsToLiaisonRequestId"
           >
             <SelectTrigger

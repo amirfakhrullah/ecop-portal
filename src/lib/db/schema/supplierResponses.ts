@@ -24,12 +24,10 @@ export const supplierResponses = pgTable("supplier_responses", {
     .$defaultFn(() => nanoid()),
   respondsToLiaisonRequestId: varchar("responds_to_liaison_request_id", {
     length: 256,
-  })
-    .references(() => liaisonRequests.id, { onDelete: "cascade" })
-    .notNull(),
-  fromSupplierUserId: varchar("from_supplier_user_id", { length: 256 })
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
+  }).references(() => liaisonRequests.id, { onDelete: "no action" }),
+  fromSupplierUserId: varchar("from_supplier_user_id", {
+    length: 256,
+  }).references(() => users.id, { onDelete: "no action" }),
   // Additional metadata
   isApproved: boolean("is_approved"),
   price: text("price"),

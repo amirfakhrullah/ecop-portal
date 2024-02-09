@@ -156,7 +156,7 @@ const LiaisonRequestForm = ({
             ClientRequest
           </Label>
           <Select
-            defaultValue={liaisonRequest?.originatingClientRequestId}
+            defaultValue={liaisonRequest?.originatingClientRequestId ?? ""}
             name="originatingClientRequestId"
           >
             <SelectTrigger
@@ -201,7 +201,7 @@ const LiaisonRequestForm = ({
             Company
           </Label>
           <Select
-            defaultValue={liaisonRequest?.forwardedToSupplierId}
+            defaultValue={liaisonRequest?.forwardedToSupplierId ?? ""}
             name="forwardedToSupplierId"
           >
             <SelectTrigger

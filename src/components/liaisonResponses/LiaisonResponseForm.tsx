@@ -159,7 +159,7 @@ const LiaisonResponseForm = ({
             SupplierResponse
           </Label>
           <Select
-            defaultValue={liaisonResponse?.originatingSupplierResponseId}
+            defaultValue={liaisonResponse?.originatingSupplierResponseId ?? ""}
             name="originatingSupplierResponseId"
           >
             <SelectTrigger
@@ -204,7 +204,7 @@ const LiaisonResponseForm = ({
             ClientRequest
           </Label>
           <Select
-            defaultValue={liaisonResponse?.respondsToClientRequestId}
+            defaultValue={liaisonResponse?.respondsToClientRequestId ?? ""}
             name="respondsToClientRequestId"
           >
             <SelectTrigger

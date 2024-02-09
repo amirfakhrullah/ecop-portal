@@ -34,10 +34,11 @@ export const clientRequests = pgTable("client_requests", {
   id: varchar("id", { length: 191 })
     .primaryKey()
     .$defaultFn(() => nanoid()),
-  fromClientUserId: varchar("from_client_user_id", { length: 256 })
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
-  productId: varchar("product_id", { length: 256 }).notNull(),
+  fromClientUserId: varchar("from_client_user_id", { length: 256 }).references(
+    () => users.id,
+    { onDelete: "no action" }
+  ),
+  productId: varchar("product_id", { length: 256 }).notNull(), // reference to product table
   isArchived: boolean("is_archived").notNull().default(false),
   isFavorite: boolean("is_favorite").notNull().default(false),
   email: text("email"),
