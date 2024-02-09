@@ -1,10 +1,4 @@
-import {
-  varchar,
-  real,
-  integer,
-  timestamp,
-  pgTable,
-} from "drizzle-orm/pg-core";
+import { varchar, timestamp, pgTable, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { supplierResponses } from "./supplierResponses";
@@ -32,13 +26,13 @@ export const liaisonResponses = pgTable("liaison_responses", {
     length: 256,
   }).references(() => users.id, { onDelete: "no action" }),
   // Additional metadata
-  margin: real("margin"),
-  unitCost: real("unit_cost"),
-  printPlateCost: real("print_plate_cost"),
-  dieCost: real("die_cost"),
-  otherSetupCost: real("other_setup_cost"),
-  deliveryCost: real("delivery_cost"),
-  tax: integer("tax"),
+  margin: numeric("margin", { precision: 12, scale: 2 }),
+  unitCost: numeric("unit_cost"),
+  printPlateCost: numeric("print_plate_cost"),
+  dieCost: numeric("die_cost"),
+  otherSetupCost: numeric("other_setup_cost"),
+  deliveryCost: numeric("delivery_cost"),
+  tax: numeric("tax"),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -53,13 +47,6 @@ export const insertLiaisonResponseParams = baseSchema
   .extend({
     supplierResponseId: z.coerce.string().min(1),
     clientRequestId: z.coerce.string().min(1),
-    margin: z.coerce.number(),
-    unitCost: z.coerce.number(),
-    printPlateCost: z.coerce.number(),
-    dieCost: z.coerce.number(),
-    otherSetupCost: z.coerce.number(),
-    deliveryCost: z.coerce.number(),
-    tax: z.coerce.number(),
   })
   .omit({
     id: true,

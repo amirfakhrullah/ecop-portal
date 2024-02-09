@@ -2,9 +2,9 @@ import {
   varchar,
   boolean,
   text,
-  real,
   timestamp,
   pgTable,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -31,12 +31,12 @@ export const supplierResponses = pgTable("supplier_responses", {
   // Additional metadata
   isApproved: boolean("is_approved"),
   price: text("price"),
-  unitCost: real("unit_cost"),
-  printPlateCost: real("print_plate_cost"),
-  dieCost: real("die_cost"),
-  otherSetupCost: real("other_setup_cost"),
-  deliveryCost: real("delivery_cost"),
-  tax: real("tax"),
+  unitCost: numeric("unit_cost"),
+  printPlateCost: numeric("print_plate_cost"),
+  dieCost: numeric("die_cost"),
+  otherSetupCost: numeric("other_setup_cost"),
+  deliveryCost: numeric("delivery_cost"),
+  tax: numeric("tax"),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -51,12 +51,6 @@ export const insertSupplierResponseParams = baseSchema
   .extend({
     liaisonRequestId: z.coerce.string().min(1),
     isApproved: z.coerce.boolean(),
-    unitCost: z.coerce.number(),
-    printPlateCost: z.coerce.number(),
-    dieCost: z.coerce.number(),
-    otherSetupCost: z.coerce.number(),
-    deliveryCost: z.coerce.number(),
-    tax: z.coerce.number(),
   })
   .omit({
     id: true,
